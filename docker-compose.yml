@@ -1,0 +1,36 @@
+# PTR PERSCOM — arranque completo com base de dados
+# Uso:  docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ptr
+      POSTGRES_PASSWORD: ptr_secret
+      POSTGRES_DB: perscom
+    volumes:
+      - ptr_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ptr -d perscom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://ptr:ptr_secret@db:5432/perscom
+      # Endereço público (usado nos links/QR e notificações). Ajusta ao teu domínio.
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      VAPID_SUBJECT: mailto:comando@ptr-rangers.pt
+      AUTH_SECRET: ${AUTH_SECRET:-muda-este-segredo-em-producao}
+      COMANDO_PASSWORD: ${COMANDO_PASSWORD:-REDPTR2026}
+
+volumes:
+  ptr_pgdata:

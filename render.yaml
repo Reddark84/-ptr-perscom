@@ -1,0 +1,27 @@
+# Publicação com um clique no Render (https://render.com) — cria app + base de dados PostgreSQL
+services:
+  - type: web
+    name: ptr-perscom
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ptr-perscom-db
+          property: connectionString
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://ptr-perscom.onrender.com
+      - key: COMANDO_PASSWORD
+        value: REDPTR2026
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: VAPID_SUBJECT
+        value: mailto:comando@ptr-rangers.pt
+databases:
+  - name: ptr-perscom-db
+    plan: free
+    region: frankfurt
